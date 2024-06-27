@@ -1,15 +1,14 @@
-import logo from "./logo.svg";
-import "./App.css";
+// src/App.js
+import React from "react";
+import YouTubeInfo from "./components/YouTubeInfo";
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        Learn Reactsssss
-      </header>
+    <div>
+      <h1>YouTube Video Info</h1>
+      <YouTubeInfo />
     </div>
   );
-}
+};
 
 export default App;
