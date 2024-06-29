@@ -1,5 +1,3 @@
-// YouTubeInfo.js
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getYouTubeVideoId } from "../utils/getYouTubeVideoId";
@@ -9,7 +7,11 @@ const YouTubeInfo = () => {
   const [url, setUrl] = useState("");
   const [videoId, setVideoId] = useState(null);
 
-  const { data, error, isLoading } = useQuery({
+  const {
+    data: videoData,
+    error: videoError,
+    isLoading: videoLoading,
+  } = useQuery({
     queryKey: ["youtubeVideo", videoId],
     queryFn: () => fetchYouTubeVideo(videoId),
     enabled: !!videoId,
@@ -25,7 +27,6 @@ const YouTubeInfo = () => {
   };
 
   const extractLocationFromDescription = (description) => {
-    // 예시: 설명에서 "Location:" 또는 "Place:"를 찾아서 그 뒤에 오는 텍스트를 위치 정보로 사용
     const locationMarker = "Location:";
     const placeMarker = "Place:";
 
@@ -47,6 +48,13 @@ const YouTubeInfo = () => {
     return location;
   };
 
+  // videoData가 변화할 때마다 캡션 데이터를 콘솔에 출력
+  React.useEffect(() => {
+    if (videoData && videoData.captions) {
+      console.log("Captions:", videoData.captions);
+    }
+  }, [videoData]);
+
   return (
     <div>
       <input
@@ -57,37 +65,35 @@ const YouTubeInfo = () => {
       />
       <button onClick={handleFetchVideoInfo}>Fetch Video Info</button>
 
-      {isLoading && <p>Loading...</p>}
-      {error && <p>Error: {error.message}</p>}
-      {data && (
+      {videoLoading && <p>Loading video info...</p>}
+      {videoError && <p>Error: {videoError.message}</p>}
+      {videoData && videoData.video && (
         <div>
-          <h3>{data.snippet.title}</h3>
-          <p>{data.snippet.description}</p>
-          <p>{data.snippet.location}</p>
-          <p>{data.snippet.placeMarker}</p>
-          <p>{data.snippet.placeholder}</p>
+          <h3>{videoData.video.snippet.title}</h3>
+          <p>{videoData.video.snippet.description}</p>
           <p>
-            <strong>Channel:</strong> {data.snippet.channelTitle}
+            <strong>Channel:</strong> {videoData.video.snippet.channelTitle}
           </p>
           <p>
             <strong>Published at:</strong>{" "}
-            {new Date(data.snippet.publishedAt).toLocaleDateString()}
+            {new Date(videoData.video.snippet.publishedAt).toLocaleDateString()}
           </p>
-          {/* 위치 정보 표시 */}
-          {data.snippet.description && (
+          {videoData.video.snippet.description && (
             <p>
               <strong>Location:</strong>{" "}
-              {extractLocationFromDescription(data.snippet.description)}
+              {extractLocationFromDescription(
+                videoData.video.snippet.description
+              )}
             </p>
           )}
-          {data.snippet.tags && (
+          {videoData.video.snippet.tags && (
             <p>
-              <strong>Tags:</strong> {data.snippet.tags.join(", ")}
+              <strong>Tags:</strong> {videoData.video.snippet.tags.join(", ")}
             </p>
           )}
           <img
-            src={data.snippet.thumbnails.medium.url}
-            alt={data.snippet.title}
+            src={videoData.video.snippet.thumbnails.medium.url}
+            alt={videoData.video.snippet.title}
           />
         </div>
       )}
