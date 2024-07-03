@@ -1,13 +1,56 @@
-// src/App.js
-import React from "react";
+import React, { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+} from "react-router-dom";
 import YouTubeInfo from "./components/YouTubeInfo";
+import LoginPage from "./components/LoginPage";
 
 const App = () => {
+  const [user, setUser] = useState(null);
+
+  const handleLoginSuccess = (userObject) => {
+    setUser(userObject);
+    console.log("Login successful:", userObject); // 로그인 성공 시 콘솔에 출력
+  };
+
+  const handleLoginFailure = (error) => {
+    console.log("Login failed:", error);
+  };
+
   return (
-    <div>
-      <h1>YouTube Video Info</h1>
-      <YouTubeInfo />
-    </div>
+    <Router>
+      <div>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              user ? (
+                <YouTubeInfo user={user} />
+              ) : (
+                <LoginPage
+                  onLoginSuccess={handleLoginSuccess}
+                  onLoginFailure={handleLoginFailure}
+                />
+              )
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <LoginPage
+                onLoginSuccess={handleLoginSuccess}
+                onLoginFailure={handleLoginFailure}
+              />
+            }
+          />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </div>
+    </Router>
   );
 };
 

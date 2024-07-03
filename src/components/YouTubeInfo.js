@@ -1,9 +1,12 @@
+// components/YouTubeInfo.js
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getYouTubeVideoId } from "../utils/getYouTubeVideoId";
 import { fetchYouTubeVideo } from "../api/fetchYouTubeVideo";
+import { Link } from "react-router-dom";
 
-const YouTubeInfo = () => {
+const YouTubeInfo = ({ user }) => {
   const [url, setUrl] = useState("");
   const [videoId, setVideoId] = useState(null);
 
@@ -13,8 +16,8 @@ const YouTubeInfo = () => {
     isLoading: videoLoading,
   } = useQuery({
     queryKey: ["youtubeVideo", videoId],
-    queryFn: () => fetchYouTubeVideo(videoId),
-    enabled: !!videoId,
+    queryFn: () => fetchYouTubeVideo(videoId, user.token),
+    enabled: !!videoId && !!user,
   });
 
   const handleFetchVideoInfo = () => {
@@ -48,15 +51,16 @@ const YouTubeInfo = () => {
     return location;
   };
 
-  // videoData가 변화할 때마다 캡션 데이터를 콘솔에 출력
-  React.useEffect(() => {
-    if (videoData && videoData.captions) {
-      console.log("Captions:", videoData.captions);
-    }
-  }, [videoData]);
-
   return (
     <div>
+      {!user && <Link to="/login">Login with Google</Link>}
+      {user && (
+        <div>
+          <h3>Welcome, {user.name}</h3>
+          <img src={user.picture} alt={user.name} />
+        </div>
+      )}
+
       <input
         type="text"
         value={url}

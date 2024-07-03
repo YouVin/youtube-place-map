@@ -1,17 +1,19 @@
 import axios from "axios";
 
-const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
-
-export async function fetchYouTubeVideo(videoId) {
+export async function fetchYouTubeVideo(videoId, token) {
   try {
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+
     // 비디오 정보 가져오기
     const videoResponse = await axios.get(
       "https://www.googleapis.com/youtube/v3/videos",
       {
+        headers,
         params: {
           part: "snippet",
           id: videoId,
-          key: API_KEY,
         },
       }
     );
@@ -24,10 +26,10 @@ export async function fetchYouTubeVideo(videoId) {
     const captionsResponse = await axios.get(
       "https://www.googleapis.com/youtube/v3/captions",
       {
+        headers,
         params: {
           part: "snippet",
           videoId: videoId,
-          key: API_KEY,
         },
       }
     );
