@@ -1,10 +1,8 @@
-// components/YouTubeInfo.js
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getYouTubeVideoId } from "../utils/getYouTubeVideoId";
 import { fetchYouTubeVideo } from "../api/fetchYouTubeVideo";
 import { Link } from "react-router-dom";
+import { refreshAccessToken } from "../utils/tokenUtils";
 
 const YouTubeInfo = ({ user }) => {
   const [url, setUrl] = useState("");
@@ -14,49 +12,43 @@ const YouTubeInfo = ({ user }) => {
     data: videoData,
     error: videoError,
     isLoading: videoLoading,
+    refetch: refetchVideoData,
   } = useQuery({
     queryKey: ["youtubeVideo", videoId],
     queryFn: () => fetchYouTubeVideo(videoId, user.token),
     enabled: !!videoId && !!user,
   });
 
-  const handleFetchVideoInfo = () => {
-    const id = getYouTubeVideoId(url);
-    if (id) {
-      setVideoId(id);
-    } else {
-      alert("Invalid YouTube URL");
+  const handleFetchVideoInfo = async () => {
+    const urlParts = url.split("v=");
+    if (urlParts.length !== 2) {
+      alert("유효하지 않은 YouTube URL입니다.");
+      return;
     }
+    const videoId = urlParts[1];
+    setVideoId(videoId);
   };
 
-  const extractLocationFromDescription = (description) => {
-    const locationMarker = "Location:";
-    const placeMarker = "Place:";
-
-    let location = "";
-    const indexOfLocation = description.indexOf(locationMarker);
-    if (indexOfLocation !== -1) {
-      location = description
-        .substring(indexOfLocation + locationMarker.length)
-        .trim();
-    } else {
-      const indexOfPlace = description.indexOf(placeMarker);
-      if (indexOfPlace !== -1) {
-        location = description
-          .substring(indexOfPlace + placeMarker.length)
-          .trim();
+  const handleRefreshTokenAndFetch = async () => {
+    try {
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        await refetchVideoData();
+      } else {
+        throw new Error("토큰 갱신에 실패했습니다.");
       }
+    } catch (error) {
+      console.error("토큰 갱신 및 데이터 다시 불러오기 실패:", error);
+      alert("데이터를 다시 불러오는 데 실패했습니다.");
     }
-
-    return location;
   };
 
   return (
     <div>
-      {!user && <Link to="/login">Login with Google</Link>}
+      {!user && <Link to="/login">Google 로그인</Link>}
       {user && (
         <div>
-          <h3>Welcome, {user.name}</h3>
+          <h3>{user.name} 님, 환영합니다!</h3>
           <img src={user.picture} alt={user.name} />
         </div>
       )}
@@ -65,40 +57,28 @@ const YouTubeInfo = ({ user }) => {
         type="text"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
-        placeholder="Enter YouTube URL"
+        placeholder="YouTube URL 입력"
       />
-      <button onClick={handleFetchVideoInfo}>Fetch Video Info</button>
+      <button onClick={handleFetchVideoInfo}>비디오 정보 가져오기</button>
 
-      {videoLoading && <p>Loading video info...</p>}
-      {videoError && <p>Error: {videoError.message}</p>}
-      {videoData && videoData.video && (
+      {videoLoading && <p>비디오 정보를 불러오는 중...</p>}
+      {videoError && (
         <div>
-          <h3>{videoData.video.snippet.title}</h3>
-          <p>{videoData.video.snippet.description}</p>
+          <p style={{ color: "red" }}>에러: {videoError.message}</p>
+          <button onClick={handleRefreshTokenAndFetch}>
+            토큰 갱신 후 다시 시도
+          </button>
+        </div>
+      )}
+      {videoData && (
+        <div>
+          <h4>비디오 정보</h4>
           <p>
-            <strong>Channel:</strong> {videoData.video.snippet.channelTitle}
+            <strong>제목:</strong> {videoData.video.snippet.title}
           </p>
           <p>
-            <strong>Published at:</strong>{" "}
-            {new Date(videoData.video.snippet.publishedAt).toLocaleDateString()}
+            <strong>채널:</strong> {videoData.video.snippet.channelTitle}
           </p>
-          {videoData.video.snippet.description && (
-            <p>
-              <strong>Location:</strong>{" "}
-              {extractLocationFromDescription(
-                videoData.video.snippet.description
-              )}
-            </p>
-          )}
-          {videoData.video.snippet.tags && (
-            <p>
-              <strong>Tags:</strong> {videoData.video.snippet.tags.join(", ")}
-            </p>
-          )}
-          <img
-            src={videoData.video.snippet.thumbnails.medium.url}
-            alt={videoData.video.snippet.title}
-          />
         </div>
       )}
     </div>

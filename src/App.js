@@ -3,7 +3,6 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Link,
   Navigate,
 } from "react-router-dom";
 import YouTubeInfo from "./components/YouTubeInfo";
@@ -14,11 +13,11 @@ const App = () => {
 
   const handleLoginSuccess = (userObject) => {
     setUser(userObject);
-    console.log("Login successful:", userObject); // 로그인 성공 시 콘솔에 출력
+    console.log("로그인 성공:", userObject); // 로그인 성공 시 콘솔에 출력
   };
 
   const handleLoginFailure = (error) => {
-    console.log("Login failed:", error);
+    console.error("로그인 실패:", error);
   };
 
   return (

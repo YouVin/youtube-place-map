@@ -6,7 +6,13 @@ export const getAuthHeaders = async () => {
       gapi.client
         .init({
           clientId: process.env.REACT_APP_GOOGLE_CLIENT_ID,
-          scope: "https://www.googleapis.com/auth/youtube.readonly",
+          scope: [
+            "https://www.googleapis.com/auth/youtube.readonly",
+            "https://www.googleapis.com/auth/youtube",
+            "https://www.googleapis.com/auth/youtube.force-ssl",
+            "https://www.googleapis.com/auth/youtubepartner",
+            // 필요한 다른 스코프를 여기에 추가할 수 있습니다.
+          ].join(" "),
         })
         .then(() => {
           const authInstance = gapi.auth2.getAuthInstance();
