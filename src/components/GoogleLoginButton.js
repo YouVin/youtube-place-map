@@ -7,6 +7,7 @@ const GoogleLoginButton = ({ onSuccess, onFailure }) => {
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
       <GoogleLogin
         onSuccess={(credentialResponse) => {
+          console.log(credentialResponse);
           const userObject = jwtDecode(credentialResponse.credential);
           onSuccess(userObject);
         }}
