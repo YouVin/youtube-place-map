@@ -1,74 +1,45 @@
-// App.js
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Navigate,
-} from "react-router-dom";
+import React from "react";
+import { GoogleLogin } from "react-google-login";
 
-const App = () => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState("");
+const clientId = "YOUR_CLIENT_ID.apps.googleusercontent.com";
 
-  const handleLogin = () => {
-    window.location.href = "http://localhost:8080/oauth2/authorization/google";
-  };
-
-  const fetchUserDetails = async () => {
-    try {
-      const response = await axios.get("http://localhost:8080/loginSuccess", {
-        withCredentials: true,
+function App() {
+  const onSuccess = (response) => {
+    console.log("Login Success:", response);
+    // 서버에 토큰 전송
+    fetch("http://localhost:8080/api/auth/google", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token: response.tokenId }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        // 로그인 성공 후 처리
+      })
+      .catch((error) => {
+        console.error("Error:", error);
       });
-      setUser(response.data);
-    } catch (error) {
-      console.error("Error fetching user details", error);
-    }
   };
 
-  const fetchToken = async () => {
-    try {
-      const response = await axios.get("http://localhost:8080/token", {
-        withCredentials: true,
-      });
-      setToken(response.data);
-    } catch (error) {
-      console.error("Error fetching token", error);
-    }
+  const onFailure = (response) => {
+    console.log("Login Failed:", response);
   };
-
-  useEffect(() => {
-    // 사용자가 로그인한 경우 사용자 정보와 액세스 토큰을 가져옵니다.
-    if (user) {
-      fetchUserDetails();
-      fetchToken();
-    }
-  }, [user]);
 
   return (
-    <Router>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <>
-              <h1>구글 로그인 예제</h1>
-              {!user ? (
-                <button onClick={handleLogin}>구글로 로그인</button>
-              ) : (
-                <div>
-                  <h2>환영합니다, {user.name}</h2>
-                  <p>액세스 토큰: {token}</p>
-                </div>
-              )}
-            </>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
+    <div>
+      <h1>구글 로그인</h1>
+      <GoogleLogin
+        clientId={clientId}
+        buttonText="구글로 로그인"
+        onSuccess={onSuccess}
+        onFailure={onFailure}
+        cookiePolicy={"single_host_origin"}
+      />
+    </div>
   );
-};
+}
 
 export default App;
