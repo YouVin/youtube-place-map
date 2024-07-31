@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 @RestController
+@CrossOrigin(origins = {"http://localhost:3000"})
 @RequestMapping("/api/auth")
 public class UserController {
-
     @PostMapping("/google")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> token) {
         String idToken = token.get("token");
@@ -22,3 +22,4 @@ public class UserController {
         return ResponseEntity.ok("로그인 성공");
     }
 }
+

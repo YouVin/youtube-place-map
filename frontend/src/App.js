@@ -1,27 +1,33 @@
 import React from "react";
-import { GoogleLogin } from "react-google-login";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useNavigate,
+} from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+import Dashboard from "./Dashboard"; // 로그인 성공 후 이동할 컴포넌트
 
 const clientId = "YOUR_CLIENT_ID.apps.googleusercontent.com";
 
 function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/" element={<Login />} />
+      </Routes>
+    </Router>
+  );
+}
+
+function Login() {
+  const navigate = useNavigate();
+
   const onSuccess = (response) => {
     console.log("Login Success:", response);
-    // 서버에 토큰 전송
-    fetch("http://localhost:8080/api/auth/google", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ token: response.tokenId }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        // 로그인 성공 후 처리
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+
+    navigate("/dashboard");
   };
 
   const onFailure = (response) => {
