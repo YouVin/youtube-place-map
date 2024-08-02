@@ -29,10 +29,6 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         );
 
-
-        // CORS 설정 활성화
-        http.cors(cors -> cors.disable());
-
         // OAuth2 로그인 설정
         http.oauth2Login(oauth2Login ->
                 oauth2Login.defaultSuccessUrl("/", true)
