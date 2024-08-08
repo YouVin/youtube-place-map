@@ -12,7 +12,7 @@ const App = () => {
       fetchLikeCount(accessToken, videoUrl);
     },
     onError: (error) => {
-      console.error("로그인 실패:", error);
+      console.error("로그인 실패 error : ", error);
     },
     scope: "https://www.googleapis.com/auth/youtube.readonly", // 필요한 스코프 추가
   });
