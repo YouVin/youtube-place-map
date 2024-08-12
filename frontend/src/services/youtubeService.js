@@ -63,4 +63,44 @@ export const fetchVideoDetails = async (accessToken, url, setVideoDetails) => {
   }
 };
 
-export const fetchSubtitles = async (accessToken, videoId) => {};
+// services/youtubeService.js
+
+export const fetchSubtitles = async (accessToken, videoId) => {
+  try {
+    // 자막 목록 가져오기
+    const captionsResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/captions?videoId=${videoId}&key=${process.env.REACT_APP_YOUTUBE_API_KEY}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    const captionsData = await captionsResponse.json();
+    const captionId = captionsData.items[0]?.id;
+    console.log(captionId);
+
+    if (captionId) {
+      // 자막 다운로드
+      const subtitleResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/captions/${captionId}?key=${process.env.REACT_APP_YOUTUBE_API_KEY}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const subtitleData = await subtitleResponse.text();
+      return subtitleData; // 자막 데이터를 반환
+    } else {
+      console.error("자막이 없습니다.");
+      return null;
+    }
+  } catch (error) {
+    console.error("자막 요청 실패:", error);
+    return null;
+  }
+};

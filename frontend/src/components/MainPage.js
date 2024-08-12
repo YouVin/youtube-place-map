@@ -1,11 +1,12 @@
 // MainPage.js
+
 import React, { useState } from "react";
 import {
   fetchVideoDetails,
   fetchSubtitles,
   fetchLikeCount,
   extractVideoId,
-} from "../services/youtubeService"; // API 호출 함수
+} from "../services/youtubeService";
 
 const MainPage = ({ accessToken }) => {
   const [videoUrl, setVideoUrl] = useState("");
@@ -48,12 +49,12 @@ const MainPage = ({ accessToken }) => {
           <img src={videoDetails.snippet.thumbnails.default.url} alt="썸네일" />
         </div>
       )}
-      {/* {subtitles && (
+      {subtitles && (
         <div>
           <h3>자막:</h3>
-          <pre>{subtitles.join("\n")}</pre>
+          <pre>{subtitles}</pre> {/* 자막을 화면에 출력 */}
         </div>
-      )} */}
+      )}
     </div>
   );
 };
