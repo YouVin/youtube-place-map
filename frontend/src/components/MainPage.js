@@ -17,10 +17,10 @@ const MainPage = ({ accessToken }) => {
   const handleFetchVideoDetails = async () => {
     const videoId = extractVideoId(videoUrl);
     if (videoId) {
-      await fetchVideoDetails(accessToken, videoUrl, setVideoDetails);
+      //await fetchVideoDetails(accessToken, videoUrl, setVideoDetails);
       const subtitleData = await fetchSubtitles(accessToken, videoId);
       setSubtitles(subtitleData);
-      await fetchLikeCount(accessToken, videoUrl, setLikeCount);
+      // await fetchLikeCount(accessToken, videoUrl, setLikeCount);
     }
   };
 
