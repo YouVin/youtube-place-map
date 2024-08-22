@@ -7,6 +7,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Map;
 
@@ -24,8 +27,8 @@ public class CaptionController {
     @PostMapping("/api/captions")
     @CrossOrigin(origins = "*")
     public ResponseEntity<String> receiveVideoData(@RequestBody Map<String, String> payload) {
-        String videoId = payload.get("accessToken");
-        String accessToken = payload.get("videoId");
+        String videoId = payload.get("accessToken"); // videoId를 가져옵니다.
+        String accessToken = payload.get("videoId"); // accessToken을 가져옵니다.
 
         // 로그 출력
         System.out.println("Received Video ID: " + videoId);
@@ -44,10 +47,31 @@ public class CaptionController {
         // 캡션 데이터를 처리
         if (response.getStatusCode().is2xxSuccessful()) {
             System.out.println("Received Captions: " + response.getBody());
-            return ResponseEntity.ok("Captions retrieved successfully: " + response.getBody());
+            String captionId = extractCaptionId(response.getBody()); // ID 추출 메소드 호출
+
+            if (captionId != null) {
+                return ResponseEntity.ok(captionId); // 자막 ID 반환
+            } else {
+                return ResponseEntity.status(404).body("자막 ID를 찾을 수 없습니다.");
+            }
         } else {
             return ResponseEntity.status(response.getStatusCode()).body("Failed to retrieve captions");
         }
+    }
+
+    private String extractCaptionId(String jsonResponse) {
+        // JSON 파싱하여 ID 추출
+        try {
+            JSONObject jsonObject = new JSONObject(jsonResponse);
+            JSONArray items = jsonObject.getJSONArray("items");
+
+            if (items.length() > 0) {
+                return items.getJSONObject(0).getString("id"); // 첫 번째 아이템의 ID 반환
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null; // ID를 찾지 못한 경우
     }
 
 }

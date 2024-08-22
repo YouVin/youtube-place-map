@@ -1,5 +1,3 @@
-// MainPage.js
-
 import React, { useState } from "react";
 import {
   fetchVideoDetails,
@@ -13,14 +11,27 @@ const MainPage = ({ accessToken }) => {
   const [videoDetails, setVideoDetails] = useState(null);
   const [likeCount, setLikeCount] = useState(null);
   const [subtitles, setSubtitles] = useState(null);
+  const [captionId, setCaptionId] = useState(null); // 자막 ID 상태 추가
 
   const handleFetchVideoDetails = async () => {
     const videoId = extractVideoId(videoUrl);
     if (videoId) {
+      // 비디오 정보 가져오기
       //await fetchVideoDetails(accessToken, videoUrl, setVideoDetails);
-      const subtitleData = await fetchSubtitles(accessToken, videoId);
-      setSubtitles(subtitleData);
-      // await fetchLikeCount(accessToken, videoUrl, setLikeCount);
+
+      // 자막 가져오기
+      const subtitleData = await fetchSubtitles(
+        accessToken,
+        videoId,
+        setCaptionId
+      );
+      if (subtitleData) {
+        setSubtitles(subtitleData); // 자막 데이터 설정
+        setCaptionId(subtitleData.id); // 자막 ID 설정 (가정: subtitleData에 id 필드가 있다고 가정)
+      }
+
+      // 좋아요 수 가져오기
+      //await fetchLikeCount(accessToken, videoUrl, setLikeCount);
     }
   };
 
@@ -53,6 +64,11 @@ const MainPage = ({ accessToken }) => {
         <div>
           <h3>자막:</h3>
           <pre>{subtitles}</pre> {/* 자막을 화면에 출력 */}
+        </div>
+      )}
+      {captionId && (
+        <div>
+          <h3>자막 ID: {captionId}</h3> {/* 자막 ID를 화면에 출력 */}
         </div>
       )}
     </div>
