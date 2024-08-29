@@ -1,10 +1,7 @@
 package com.example.youtube_place_map;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.json.JSONArray;
@@ -26,16 +23,16 @@ public class CaptionController {
 
     @PostMapping("/api/captions")
     @CrossOrigin(origins = "*")
-    public ResponseEntity<String> receiveVideoData(@RequestBody Map<String, String> payload) {
-        String videoId = payload.get("accessToken"); // videoId를 가져옵니다.
-        String accessToken = payload.get("videoId"); // accessToken을 가져옵니다.
+    public ResponseEntity<byte[]> receiveVideoData(@RequestBody Map<String, String> payload) {
+        String videoId = payload.get("videoId");
+        String accessToken = payload.get("accessToken");
 
         // 로그 출력
         System.out.println("Received Video ID: " + videoId);
         System.out.println("Received Access Token: " + accessToken);
 
-        // YouTube API 호출
-        String captionUrl = "https://www.googleapis.com/youtube/v3/captions?videoId=" + videoId + "&key=" + youtubeApiKey;
+        // YouTube API 호출하여 캡션 ID 가져오기
+        String captionUrl = "https://www.googleapis.com/youtube/v3/captions?videoId=" + videoId + "&key=" + youtubeApiKey + "&part=snippet";
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -44,35 +41,55 @@ public class CaptionController {
         HttpEntity<String> entity = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange(captionUrl, HttpMethod.GET, entity, String.class);
 
-        // 캡션 데이터를 처리
-        if (response.getStatusCode().is2xxSuccessful()) {
-            System.out.println("Received Captions: " + response.getBody());
-            String captionId = extractCaptionId(response.getBody()); // ID 추출 메소드 호출
-
+        if (response.getStatusCode() == HttpStatus.OK) {
+            String captionId = extractCaptionId(response.getBody());
+            System.out.println(captionId);
             if (captionId != null) {
-                return ResponseEntity.ok(captionId); // 자막 ID 반환
+                byte[] subtitles = fetchSubtitles(captionId, accessToken);
+                HttpHeaders responseHeaders = new HttpHeaders();
+                responseHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+                responseHeaders.setContentDisposition(ContentDisposition.builder("attachment")
+                        .filename("subtitles.srt") // 파일명 설정
+                        .build());
+                return new ResponseEntity<>(subtitles, responseHeaders, HttpStatus.OK);
             } else {
-                return ResponseEntity.status(404).body("자막 ID를 찾을 수 없습니다.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("캡션 ID를 찾을 수 없습니다.".getBytes());
             }
         } else {
-            return ResponseEntity.status(response.getStatusCode()).body("Failed to retrieve captions");
+            return ResponseEntity.status(response.getStatusCode()).body(("YouTube API 호출 실패: " + response.getBody()).getBytes());
         }
     }
 
     private String extractCaptionId(String jsonResponse) {
-        // JSON 파싱하여 ID 추출
+        // JSON 응답에서 캡션 ID를 추출하는 로직을 구현합니다.
         try {
             JSONObject jsonObject = new JSONObject(jsonResponse);
             JSONArray items = jsonObject.getJSONArray("items");
-
             if (items.length() > 0) {
-                return items.getJSONObject(0).getString("id"); // 첫 번째 아이템의 ID 반환
+                return items.getJSONObject(0).getString("id"); // 첫 번째 캡션 ID 반환
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return null; // ID를 찾지 못한 경우
+        return null;
     }
 
-}
+    private byte[] fetchSubtitles(String captionId, String accessToken) {
+        String subtitlesUrl = "https://www.googleapis.com/youtube/v3/captions/" + captionId + "?key=" + youtubeApiKey;
 
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        ResponseEntity<byte[]> response = restTemplate.exchange(subtitlesUrl, HttpMethod.GET, entity, byte[].class);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            return response.getBody(); // 자막 반환
+        } else {
+            return ("자막을 가져오는 데 실패했습니다: " + response.getBody()).getBytes();
+        }
+    }
+
+
+}
